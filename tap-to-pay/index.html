@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <title>BarberLink · Stripe</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f2f2f7; color: #111; font: 17px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; }
+    main { max-width: 440px; width: 100%; padding: 28px; border-radius: 24px; background: white; }
+    h1 { font-size: 26px; line-height: 1.2; }
+    p { color: #555; }
+    a { display: block; padding: 15px 20px; border-radius: 14px; color: white; background: #111; text-align: center; text-decoration: none; font-weight: 600; }
+    a:focus-visible { outline: 3px solid #246bce; outline-offset: 4px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="heading">Continúa en BarberLink</h1>
+    <p id="message">Vuelve a la app para consultar tu cuenta de Stripe y continuar desde el paso pendiente.</p>
+    <a id="return" href="barberlink://tap-to-pay?connect=return">Volver a BarberLink</a>
+    <p id="note">Volver de Stripe no confirma la verificación. BarberLink comprobará el estado de tu cuenta.</p>
+  </main>
+  <script>
+    (() => {
+      const query = new URLSearchParams(window.location.search);
+      const action = query.get('connect') === 'refresh' ? 'refresh' : 'return';
+      // Only a fixed continuation action crosses into the app. No account,
+      // token, onboarding link or untrusted redirect is copied from the URL.
+      document.getElementById('return').href = 'barberlink://tap-to-pay?connect=' + action;
+      if (!navigator.language.toLowerCase().startsWith('es')) {
+        document.documentElement.lang = 'en';
+        document.getElementById('heading').textContent = 'Continue in BarberLink';
+        document.getElementById('message').textContent = 'Return to the app to check your Stripe account and continue from the remaining step.';
+        document.getElementById('return').textContent = 'Return to BarberLink';
+        document.getElementById('note').textContent = 'Returning from Stripe does not confirm verification. BarberLink will check your account status.';
+      }
+    })();
+  </script>
+</body>
+</html>
