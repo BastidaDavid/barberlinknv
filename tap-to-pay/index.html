@@ -27,9 +27,17 @@
     (() => {
       const query = new URLSearchParams(window.location.search);
       const action = query.get('connect') === 'refresh' ? 'refresh' : 'return';
-      // Only a fixed continuation action crosses into the app. No account,
-      // token, onboarding link or untrusted redirect is copied from the URL.
-      document.getElementById('return').href = 'barberlink://tap-to-pay?connect=' + action;
+      // OAuth's independent, short-lived handoff is delivered only to this
+      // browser in a fragment. Never forward account IDs, provider tokens or URLs.
+      const fragment = new URLSearchParams((window.location.hash || '').slice(1));
+      const handoff = fragment.get('handoff');
+      const error = fragment.get('error');
+      let link = 'barberlink://tap-to-pay?connect=' + action;
+      if (fragment.getAll('handoff').length === 1 && /^[a-f0-9]{64}$/.test(handoff || '') && !error) link += '&handoff=' + handoff;
+      else if (['cancelled', 'expired', 'unavailable', 'incompatible', 'failed'].includes(error) && fragment.getAll('error').length === 1) link += '&error=' + error;
+      else if (handoff || error) link += '&error=expired';
+      document.getElementById('return').href = link;
+      if (window.location.hash && window.history) window.history.replaceState(null, '', window.location.pathname + window.location.search);
       if (!navigator.language.toLowerCase().startsWith('es')) {
         document.documentElement.lang = 'en';
         document.getElementById('heading').textContent = 'Continue in BarberLink';
@@ -37,6 +45,8 @@
         document.getElementById('return').textContent = 'Return to BarberLink';
         document.getElementById('note').textContent = 'Returning from Stripe does not confirm verification. BarberLink will check your account status.';
       }
+      // Keep the visible button as a fallback when iOS blocks automatic opening.
+      if (handoff || error) window.location.replace(link);
     })();
   </script>
 </body>
